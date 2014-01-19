@@ -24,11 +24,16 @@
 
 set_default :puma_pid,    -> { "#{deploy_to}/#{shared_path}/tmp/pids/puma.pid" }
 set_default :puma_socket, -> { "#{deploy_to}/#{shared_path}/tmp/sockets/puma.sock" }
+set_default :puma_threads, -> { "0:16" }
+set_default :puma_workers, -> { "1" }
 
 namespace :puma do
   desc 'Start puma'
   task start: :environment do
-    queue %[cd #{deploy_to}/#{current_path} && bundle exec puma -q -d -e #{rails_env} -b unix://#{puma_socket} --pidfile #{puma_pid}]
+    queue %{
+      cd #{deploy_to}/#{current_path}
+      bundle exec puma -t #{puma_threads} -w #{puma_workers} -q -d -e #{rails_env} -b unix://#{puma_socket} --pidfile #{puma_pid}
+    }
   end
 
   desc 'Stop puma'
